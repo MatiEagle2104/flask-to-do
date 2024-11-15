@@ -1,0 +1,19 @@
+!DOCTYPE html
+html lang=en
+head
+    meta charset=UTF-8
+    titleTo-Do List Apptitle
+head
+body
+    h1My To-Do Listh1
+    form action=add method=POST
+        input type=text name=task placeholder=Enter a new task
+        button type=submitAdd Taskbutton
+    form
+    ul
+        {% for task in tasks %}
+        li{{ loop.index }}. {{ task }} a href=delete{{ loop.index0 }}Deleteali
+        {% endfor %}
+    ul
+body
+html
