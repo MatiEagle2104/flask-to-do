@@ -1,14 +1,21 @@
 pipeline {
-  agent {label "linux"}
-  options {
-    buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')
-    disableConcurrentBuilds()
-  }
-  stages {
-    stage('Hello') {
-      steps {
-        echo "hello"
-      }
+    agent any
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo 'Pobieram pliki z repozytorium...'
+                checkout scm
+            }
+        }
     }
-  }
+
+    post {
+        success {
+            echo 'Pobieranie zakończone sukcesem!'
+        }
+        failure {
+            echo 'Pobieranie zakończone niepowodzeniem.'
+        }
+    }
 }
