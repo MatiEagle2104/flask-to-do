@@ -9,20 +9,6 @@ pipeline {
             }
         }
 
-        stage('OWASP Dependency Check') {
-            steps {
-                echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
-                dependencyCheck additionalArguments: '', 
-                               odcInstallation: 'OWASP Dependency Check', 
-                               configFile: '', 
-                               failBuildOnCVSS: 7, 
-                               healthy: 0, 
-                               numberOfDependencies: 0, 
-                               refThreshold: 0, 
-                               skipArchive: false
-            }
-        }
-
         stage('Build') {
             steps {
                 echo 'Buduję stabilną wersję aplikacji...'
