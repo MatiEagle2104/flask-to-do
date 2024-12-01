@@ -12,8 +12,9 @@ pipeline {
         stage('OWASP Dependency Check') {
             steps {
                 echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
-                dependencyCheck additionalArguments: '', failBuildOnCVSS: '7', 
-                includeTestDependencies: false, scanPath: '.'
+                dependencyCheck additionalArguments: '', 
+                               odcInstallation: 'OWASP Dependency Check', 
+                               scanPath: '.'
             }
         }
 
