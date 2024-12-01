@@ -9,6 +9,17 @@ pipeline {
             }
         }
 
+        stage('Dependency Check') {
+            steps {
+                echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
+                dependencyCheck additionalArguments: '', canResolve: false, failBuildOnCVSS: '7', 
+                findingsPublishers: [], 
+                includeTestDependencies: false, 
+                project: 'my-project', 
+                scanPath: '.'
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Buduję stabilną wersję aplikacji...'
