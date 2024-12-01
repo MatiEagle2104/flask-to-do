@@ -9,6 +9,19 @@ pipeline {
             }
         }
 
+        stage('OWASP Dependency-Check Vulnerabilities') {
+            steps {
+                echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
+                dependencyCheck additionalArguments: ''' 
+                    -o './'
+                    -s './'
+                    -f 'ALL' 
+                    --prettyPrint''', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+                
+                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Buduję stabilną wersję aplikacji...'
