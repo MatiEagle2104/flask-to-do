@@ -30,7 +30,7 @@ pipeline {
                 echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
                 dependencyCheck additionalArguments: ''' 
                     -o './'
-                    -s './requirements.txt'
+                    -s './'
                     -f 'ALL' 
                     --nvdApiKey="${env.NVD_API_KEY}"
                     --prettyPrint''', odcInstallation: 'owasp-dc'
