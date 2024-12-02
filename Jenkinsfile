@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
+        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')  // Użyj ID dodanego w Jenkins
     }
 
     tools {
@@ -41,6 +41,31 @@ pipeline {
                 script {
                     echo 'Wyniki skanowania zależności:'
                     sh 'cat dependency-check-report.xml'
+                }
+            }
+        }
+
+        stage('Check for Critical or High Vulnerabilities') {
+            steps {
+                script {
+                    echo 'Sprawdzam raport pod kątem krytycznych lub wysokich podatności...'
+
+                    // Sprawdzanie, czy w raporcie są krytyczne lub wysokie podatności
+                    def highOrCriticalVulnerabilities = sh(script: '''
+                        grep -i -e "critical" -e "high" dependency-check-report.xml || true
+                    ''', returnStdout: true).trim()
+
+                    if (highOrCriticalVulnerabilities) {
+                        // Jeśli wykryto wysoką lub krytyczną podatność, pokazujemy cały raport
+                        echo 'Wykryto wysokie lub krytyczne podatności!'
+                        echo 'Szczegóły raportu:'
+                        sh 'cat dependency-check-report.xml'
+
+                        // Zatrzymujemy pipeline i pokazujemy komunikat o niepowodzeniu
+                        error 'Pipeline zakończony niepowodzeniem ze względu na wykrycie poważnej podatności w wykorzystywanych zależnościach.'
+                    } else {
+                        echo 'Brak wysokich lub krytycznych podatności.'
+                    }
                 }
             }
         }
