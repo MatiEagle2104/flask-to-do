@@ -1,3 +1,1 @@
-flask==1.0.2  # Stara wersja Flask, która może zawierać podatności
-requests==2.19.0  # Znana podatność: CVE-2018-18074
-sqlalchemy==1.3.0  # Znane luki w starszych wersjach
+
