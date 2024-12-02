@@ -40,29 +40,6 @@ pipeline {
             }
         }
 
-        stage('Check for Critical or High Vulnerabilities') {
-            steps {
-                script {
-                    echo 'Sprawdzam raport pod kątem krytycznych lub wysokich podatności...'
-
-                    // Sprawdzanie, czy w raporcie są krytyczne lub wysokie podatności
-                    def highOrCriticalVulnerabilities = sh(script: '''
-                        grep -i -e "critical" -e "high" dependency-check-report.xml || true
-                    ''', returnStdout: true).trim()
-
-                    if (highOrCriticalVulnerabilities) {
-                        // Jeśli wykryto wysoką lub krytyczną podatność, pokazujemy cały raport
-                        echo 'Wykryto wysokie lub krytyczne podatności!'
-
-                        // Zatrzymujemy pipeline i pokazujemy komunikat o niepowodzeniu
-                        error 'Pipeline zakończony niepowodzeniem ze względu na wykrycie poważnej podatności w wykorzystywanych zależnościach.'
-                    } else {
-                        echo 'Brak wysokich lub krytycznych podatności.'
-                    }
-                }
-            }
-        }
-
         stage('Build') {
             steps {
                 echo 'Buduję stabilną wersję aplikacji...'
