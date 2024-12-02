@@ -9,7 +9,7 @@
     "lint": "eslint ./"
   },
   "keywords": [
-    "SQL Injecion",
+    "SQL Injection",
     "Web Security",
     "Node",
     "Express",
@@ -18,9 +18,15 @@
   "author": "Abdul Moiz",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2"
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mssql": "^6.2.3",
+    "lodash": "^4.17.15", 
+    "request": "^2.88.2"   
   },
   "devDependencies": {
-    "jest": "^29.6.4"
+    "eslint": "^7.13.0",
+    "nodemon": "^2.0.6",
+    "mongoose": "^5.9.20" 
   }
 }
