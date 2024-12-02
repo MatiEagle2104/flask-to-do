@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
-        SONARQUBE_SERVER = 'SonarQube' // Nazwa serwera SonarQube z konfiguracji w Jenkinsie
+        SONARQUBE_SERVER = 'Jenkins-SolarQube' // Nazwa serwera SonarQube z konfiguracji w Jenkinsie
     }
 
     tools {
