@@ -20,6 +20,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Instaluje zależności npm...'
+                sh 'rm -rf node_modules package-lock.json'
                 sh 'npm install'
             }
         }
