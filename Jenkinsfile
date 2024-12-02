@@ -18,7 +18,7 @@ pipeline {
                 echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
                 dependencyCheck additionalArguments: ''' 
                     -o './'
-                    -s './build.gradle'
+                    -s './'
                     -f 'ALL' 
                     --nvdApiKey ${env.NVD_API_KEY}
                     --prettyPrint''', odcInstallation: 'owasp-dc'
