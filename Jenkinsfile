@@ -52,8 +52,6 @@ pipeline {
                     if (highOrCriticalVulnerabilities) {
                         // Jeśli wykryto wysoką lub krytyczną podatność, pokazujemy cały raport
                         echo 'Wykryto wysokie lub krytyczne podatności!'
-                        echo 'Szczegóły raportu:'
-                        sh 'cat dependency-check-report.xml'
 
                         // Zatrzymujemy pipeline i pokazujemy komunikat o niepowodzeniu
                         error 'Pipeline zakończony niepowodzeniem ze względu na wykrycie poważnej podatności w wykorzystywanych zależnościach.'
