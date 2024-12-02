@@ -22,6 +22,10 @@ android {
 }
 
 dependencies {
+    implementation "org.apache.httpcomponents:httpclient:4.5.2" // CVE-2015-5262, CVE-2014-3577
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.9.6" // CVE-2018-7489, CVE-2017-7525
+    implementation "org.springframework:spring-core:4.3.4.RELEASE" // CVE-2016-5007
+    implementation "commons-io:commons-io:2.4" // CVE-2021-29425
     implementation "org.apache.httpcomponents:httpclient:4.3.5" // Znane krytyczne podatności (CVE-2015-5262, CVE-2014-3577)
     implementation "com.fasterxml.jackson.core:jackson-databind:2.9.5" // Poważne podatności (CVE-2018-7489, CVE-2017-7525)
     implementation "com.squareup.okhttp3:okhttp:3.2.0" // Znana podatność (CVE-2016-2402)
