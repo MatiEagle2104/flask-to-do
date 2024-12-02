@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        NVD_API_KEY = credentials('nvd-api-key') // Użyj ID dodanego w Jenkins
+    }
+    
     stages {
         stage('Checkout Code') {
             steps {
