@@ -2,13 +2,9 @@ pipeline {
     agent any
 
     environment {
-        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
+        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d') // Użyj ID dodanego w Jenkins
     }
-
-    tools {
-        nodejs 'NodeJS'  // Wybierz nazwę konfiguracji NodeJS
-    }
-
+    
     stages {
         stage('Checkout Code') {
             steps {
@@ -17,9 +13,9 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Node Dependencies') {
             steps {
-                echo 'Instaluje zależności npm...'
+                echo 'Instaluję zależności npm...'
                 sh 'npm install'
             }
         }
@@ -32,7 +28,10 @@ pipeline {
                     -s './'
                     -f 'ALL' 
                     --nvdApiKey ${env.NVD_API_KEY}
-                    --prettyPrint''', odcInstallation: 'owasp-dc'
+                    --prettyPrint
+                    --disableAssemblyAnalyzer  // Wyłącza analizę plików .NET
+                    --disableDotNetAnalyzer  // Wyłącza analizę plików .NET
+                    ''', odcInstallation: 'owasp-dc'
                 
                 // Publikowanie raportu
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
