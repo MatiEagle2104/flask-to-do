@@ -7,7 +7,8 @@ pipeline {
     }
 
     tools {
-        nodejs 'NodeJS'  // Wybierz nazwę konfiguracji NodeJS
+        nodejs 'NodeJS'
+        git 'Default' // Zgodna konfiguracja Git
     }
 
     stages {
@@ -34,7 +35,7 @@ pipeline {
                             -o './'
                             -s './'
                             -f 'ALL' 
-                            --nvdApiKey ${env.NVD_API_KEY}
+                            --nvdApiKey $NVD_API_KEY
                             --prettyPrint''', odcInstallation: 'owasp-dc'
                     } catch (Exception e) {
                         echo 'Nie udało się zaktualizować danych NVD. Kontynuuję skanowanie przy użyciu lokalnych danych.'
@@ -55,7 +56,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo 'Rozpoczynam skanowanie SonarQube...'
-                withSonarQubeEnv('SonarQube') { // Użycie konfiguracji serwera SonarQube
+                withSonarQubeEnv('SonarQube') { // Nazwa musi zgadzać się z konfiguracją Jenkins
                     sh '''
                         sonar-scanner \
                             -Dsonar.projectKey=your-project-key \
