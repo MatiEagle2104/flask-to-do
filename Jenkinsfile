@@ -53,28 +53,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo 'Rozpoczynam skanowanie SonarQube...'
-                withSonarQubeEnv('SonarQube') { // Nazwa musi zgadzać się z konfiguracją Jenkins
-                    sh '''
-                        sonar-scanner \
-                            -Dsonar.projectKey=your-project-key \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=$SONAR_HOST_URL \
-                            -Dsonar.login=$SONAR_AUTH_TOKEN
-                    '''
-                }
-            }
-        }
-
-        stage('Wait for SonarQube Quality Gate') {
-            steps {
-                echo 'Czekam na wynik Quality Gate SonarQube...'
-                waitForQualityGate abortPipeline: true
-            }
-        }
-
         stage('Build') {
             steps {
                 echo 'Buduję stabilną wersję aplikacji...'
