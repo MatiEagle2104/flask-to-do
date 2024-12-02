@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')  // Użyj ID dodanego w Jenkins
+        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
     }
 
     tools {
@@ -20,7 +20,6 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Instaluje zależności npm...'
-                sh 'rm -rf node_modules package-lock.json'
                 sh 'npm install'
             }
         }
@@ -32,7 +31,7 @@ pipeline {
                     -o './'
                     -s './'
                     -f 'ALL' 
-                    --nvdApiKey="${env.NVD_API_KEY}"
+                    --nvdApiKey ${env.NVD_API_KEY}
                     --prettyPrint''', odcInstallation: 'owasp-dc'
                 
                 // Publikowanie raportu
