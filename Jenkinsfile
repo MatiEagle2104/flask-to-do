@@ -1,13 +1,12 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:16'  // Wybierz odpowiednią wersję Node.js (np. node:16)
-            label 'my-docker-agent'  // Opcjonalnie, jeśli masz etykiety dla swoich agentów
-        }
-    }
+    agent any
 
     environment {
         NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
+    }
+
+    tools {
+        nodejs 'NodeJS'  // Wybierz nazwę konfiguracji NodeJS
     }
 
     stages {
@@ -34,7 +33,7 @@ pipeline {
                     -f 'ALL' 
                     --nvdApiKey ${env.NVD_API_KEY}
                     --prettyPrint''', odcInstallation: 'owasp-dc'
-
+                
                 // Publikowanie raportu
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
 
