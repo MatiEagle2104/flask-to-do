@@ -32,8 +32,6 @@ pipeline {
                     -s './'
                     -f 'ALL' 
                     --nvdApiKey ${env.NVD_API_KEY}
-                    --disableAssemblyAnalyzer  
-                    --disableDotNetAnalyzer
                     --prettyPrint''', odcInstallation: 'owasp-dc'
                 
                 // Publikowanie raportu
