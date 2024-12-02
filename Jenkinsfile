@@ -36,12 +36,6 @@ pipeline {
                 
                 // Publikowanie raportu
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-
-                // Wyświetlenie zawartości raportu w logach Jenkinsa
-                script {
-                    echo 'Wyniki skanowania zależności:'
-                    sh 'cat dependency-check-report.xml'
-                }
             }
         }
 
