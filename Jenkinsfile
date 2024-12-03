@@ -3,12 +3,10 @@ pipeline {
 
     environment {
         NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
-        SONARQUBE_SERVER = 'Jenkins-SolarQube' // Nazwa serwera SonarQube z konfiguracji w Jenkinsie
     }
 
     tools {
-        nodejs 'NodeJS'
-        git 'Default' // Zgodna konfiguracja Git
+        nodejs 'NodeJS'  // Wybierz nazwę konfiguracji NodeJS
     }
 
     stages {
@@ -29,27 +27,21 @@ pipeline {
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
-                script {
-                    try {
-                        dependencyCheck additionalArguments: ''' 
-                            -o './'
-                            -s './'
-                            -f 'ALL' 
-                            --nvdApiKey $NVD_API_KEY
-                            --prettyPrint''', odcInstallation: 'owasp-dc'
-                    } catch (Exception e) {
-                        echo 'Nie udało się zaktualizować danych NVD. Kontynuuję skanowanie przy użyciu lokalnych danych.'
-                        sh '''
-                            dependency-check.sh \
-                            --project "My Project" \
-                            --format ALL \
-                            --scan ./ \
-                            --out ./ \
-                            --prettyPrint
-                        '''
-                    }
-                }
+                dependencyCheck additionalArguments: ''' 
+                    -o './'
+                    -s './'
+                    -f 'ALL' 
+                    --nvdApiKey ${env.NVD_API_KEY}
+                    --prettyPrint''', odcInstallation: 'owasp-dc'
+                
+                // Publikowanie raportu
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+
+                // Wyświetlenie zawartości raportu w logach Jenkinsa
+                script {
+                    echo 'Wyniki skanowania zależności:'
+                    sh 'cat dependency-check-report.xml'
+                }
             }
         }
 
