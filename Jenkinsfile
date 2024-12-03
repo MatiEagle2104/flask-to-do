@@ -11,29 +11,22 @@ pipeline {
 
         stage('SonarQube Code Analysis') {
             steps {
-                dir("${WORKSPACE}"){
-                // Run SonarQube analysis for Python
                 script {
-                    def scannerHome = tool name: 'scanner-name', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    withSonarQubeEnv('sonar') {
-                        sh "echo $pwd"
+                    def scannerHome = tool name: 'SQ1', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                    withSonarQubeEnv('SQ1') {
                         sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
             }
-            }
-       }
-       stage("SonarQube Quality Gate Check") {
+        }
+
+        stage("SonarQube Quality Gate Check") {
             steps {
                 script {
-                def qualityGate = waitForQualityGate()
-                    
+                    def qualityGate = waitForQualityGate()
                     if (qualityGate.status != 'OK') {
-                        echo "${qualityGate.status}"
-                        error "Quality Gate failed: ${qualityGateStatus}"
-                    }
-                    else {
-                        echo "${qualityGate.status}"
+                        error "Quality Gate failed: ${qualityGate.status}"
+                    } else {
                         echo "SonarQube Quality Gates Passed"
                     }
                 }
@@ -43,14 +36,12 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Buduję wersję developerską aplikacji...'
-                sh 'echo "Budowa aplikacji - gałąź dev"'
             }
         }
 
         stage('Run Development Tests') {
             steps {
                 echo 'Uruchamiam testy developerskie...'
-                sh 'echo "Testy developerskie - gałąź dev"'
             }
         }
     }
