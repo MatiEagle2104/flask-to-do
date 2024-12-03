@@ -4,17 +4,33 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '5'))
     }
 
+    environment {
+        SONARQUBE = 'Jenkins-SonarQube'  // Nazwa zdefiniowanego serwera SonarQube w Jenkinsie
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'Pobieram kod z gałęzi dev...'
+                echo 'Pobieram kod z repozytorium...'
                 checkout scm
             }
         }
-   
-        stage('Build') {
+
+        stage('Install Dependencies') {
             steps {
-                echo 'Buduję wersję developerską aplikacji...'
+                echo 'Instaluję zależności...'
+                sh 'npm install'
+            }
+        }
+
+        stage('Run SonarQube Scan') {
+            steps {
+                script {
+                    // Przeprowadzamy skanowanie SonarQube dla projektu Node.js
+                    withSonarQubeEnv(SONARQUBE) {
+                        sh 'npm run sonar'  // Zakładając, że masz skrypt "sonar" w package.json
+                    }
+                }
             }
         }
 
