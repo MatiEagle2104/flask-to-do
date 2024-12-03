@@ -26,6 +26,6 @@
   "devDependencies": {
     "eslint": "^7.13.0",
     "nodemon": "^2.0.6",
-    "sonar-scanner": "^4.6.0"  // Dodaj zależność do sonar-scanner
+    "sonar-scanner": "^4.6.0" 
   }
 }
