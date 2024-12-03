@@ -20,6 +20,19 @@ pipeline {
             }
         }
 
+        stage('Check Quality Gate') {
+            steps {
+                echo 'Sprawdzanie SonarQube Quality Gate...'
+                // Pobiera status jakości kodu
+                script {
+                    def qg = waitForQualityGate()
+                    if (qg.status != 'OK') {
+                        error "SonarQube Quality Gate nie spełniony: ${qg.status}"
+                    }
+                }
+            }
+        }
+
         stage('Run Development Tests') {
             steps {
                 echo 'Uruchamiam testy developerskie...'
