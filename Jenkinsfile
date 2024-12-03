@@ -19,7 +19,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Instaluję zależności...'
-                sh 'chmod +x ./npmw
+                sh 'chmod +x ./npmw'
                 //sh './npmw install'
             }
         }
