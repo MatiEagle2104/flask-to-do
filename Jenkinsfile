@@ -16,7 +16,8 @@ pipeline {
             agent any
             steps {
               withSonarQubeEnv('SQ1') {
-                sh 'mvn clean package sonar:sonar'
+                sh 'chmod +x ./mvnw'
+                sh './mvnw clean package sonar:sonar'
               }
             }
           }
