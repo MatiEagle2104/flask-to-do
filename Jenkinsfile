@@ -15,8 +15,6 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Buduję wersję developerską aplikacji...'
-                // Przykładowe polecenie do budowania aplikacji (np. Maven)
-                sh './mvnw clean install' // Jeśli korzystasz z Maven Wrapper
             }
         }
 
