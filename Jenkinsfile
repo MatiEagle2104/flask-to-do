@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        docker { image 'node:16' }  // Użyj obrazu Docker z Node.js
+    }
     options {
         buildDiscarder(logRotator(numToKeepStr: '5'))
     }
@@ -9,27 +11,19 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                echo 'Pobieram kod z repozytorium...'
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 echo 'Instaluję zależności...'
-                sh 'chmod +x ./mvn'
-                //sh './npmw install'
+                sh 'npm install'
             }
         }
 
         stage('Run SonarQube Scan') {
             steps {
                 script {
-                    // Przeprowadzamy skanowanie SonarQube dla projektu Node.js
+                    // Przeprowadź skanowanie SonarQube
                     withSonarQubeEnv(SONARQUBE) {
-                        sh './mvn run sonar'  // Zakładając, że masz skrypt "sonar" w package.json
+                        sh 'npm run sonar'
                     }
                 }
             }
