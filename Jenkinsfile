@@ -19,7 +19,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Instaluję zależności...'
-                sh 'npm install'
+                sh 'chmod +x ./npmw
+                //sh './npmw install'
             }
         }
 
@@ -28,7 +29,7 @@ pipeline {
                 script {
                     // Przeprowadzamy skanowanie SonarQube dla projektu Node.js
                     withSonarQubeEnv(SONARQUBE) {
-                        sh 'npm run sonar'  // Zakładając, że masz skrypt "sonar" w package.json
+                        sh './npmw run sonar'  // Zakładając, że masz skrypt "sonar" w package.json
                     }
                 }
             }
