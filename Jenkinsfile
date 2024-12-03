@@ -5,7 +5,7 @@ pipeline {
     }
 
     environment {
-        SONARQUBE = 'Jenkins-SonarQube'  // Nazwa zdefiniowanego serwera SonarQube w Jenkinsie
+        SONARQUBE = 'SQ1'  // Nazwa zdefiniowanego serwera SonarQube w Jenkinsie
     }
 
     stages {
