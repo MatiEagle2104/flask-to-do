@@ -17,13 +17,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                echo 'Instaluje zależności npm...'
-                sh 'npm install'
-            }
-        }
-
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
