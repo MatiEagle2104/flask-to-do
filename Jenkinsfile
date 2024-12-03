@@ -1,35 +1,63 @@
 pipeline {
     agent any
 
+    environment {
+        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
+    }
+
+    tools {
+        nodejs 'NodeJS'  // Wybierz nazwę konfiguracji NodeJS
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'Pobieram kod z gałęzi feature...'
+                echo 'Pobieram kod z gałęzi test...'
                 checkout scm
             }
         }
 
-        stage('Build Experimental Features') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Buduję eksperymentalne funkcje...'
-                sh 'echo "Budowa funkcji eksperymentalnych - gałąź feature"'
+                echo 'Instaluje zależności...'
             }
         }
 
-        stage('Run Feature Tests') {
+        stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
-                echo 'Uruchamiam testy eksperymentalnych funkcji...'
-                sh 'echo "Testy funkcji eksperymentalnych - gałąź feature"'
+                echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
+                dependencyCheck additionalArguments: ''' 
+                    -o './'
+                    -s './'
+                    -f 'ALL' 
+                    --nvdApiKey ${env.NVD_API_KEY}
+                    --prettyPrint''', odcInstallation: 'owasp-dc'
+        
+                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Buduję stabilną wersję aplikacji...'
+                sh 'echo "Brak kodu do budowy - gałąź test"'
+            }
+        }
+
+        stage('Deploy to Production') {
+            steps {
+                echo 'Wdrażam aplikację na środowisko produkcyjne...'
+                sh 'echo "Brak wdrożenia - gałąź test"'
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline zakończony sukcesem dla gałęzi feature!'
+            echo 'Pipeline zakończony sukcesem dla gałęzi test!'
         }
         failure {
-            echo 'Pipeline zakończony niepowodzeniem dla gałęzi feature.'
+            echo 'Pipeline zakończony niepowodzeniem dla gałęzi test.'
         }
     }
 }
