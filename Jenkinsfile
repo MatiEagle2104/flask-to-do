@@ -12,23 +12,28 @@ pipeline {
             }
         }
 
-        stage("build & SonarQube analysis") {
-            agent any
+        stage('SonarQube analysis') {
             steps {
-              withSonarQubeEnv('SQ1') {
-                sh 'chmod +x ./mvnw'
-                sh './mvnw clean package sonar:sonar'
-              }
+                withSonarQubeEnv('xxxx-movil-sonarqube') {
+            // requires SonarQube Scanner for Gradle 2.1+
+            // It's important to add --info because of SONARJNKNS-281
+                    sh './gradlew --info sonarqube  -Dsonar.branch.name=${GIT_BRANCH}'
+                }
             }
-          }
-        
-          stage("Quality Gate") {
+        }
+
+        stage("Quality Gate"){
             steps {
-              timeout(time: 1, unit: 'HOURS') {
-                waitForQualityGate abortPipeline: true
-              }
+                timeout(time: 600, unit: 'SECONDS') {
+                    script{
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Se aborta la pipeline debido a que no se superan los umbrales de calidad: ${qg.status}"
+                        }
+                    }
+                } 
             }
-          }
+        } 
    
         stage('Build') {
             steps {
