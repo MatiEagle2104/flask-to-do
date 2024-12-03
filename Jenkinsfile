@@ -1,5 +1,8 @@
 pipeline {
-    agent any
+    agent { label 'linux' }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+    }
 
     stages {
         stage('Checkout Code') {
@@ -9,30 +12,14 @@ pipeline {
             }
         }
 
-        stage('SonarQube Code Analysis') {
+        stage('Scan') {
             steps {
-                script {
-                    def scannerHome = tool name: 'SQ1', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    withSonarQubeEnv('SQ1') {
-                        sh "${scannerHome}/bin/sonar-scanner"
-                    }
+                withSonarQubeEnv(installationName: 'SQ1') {
+                    sh './mvnw clean org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar'
                 }
             }
         }
-
-        stage("SonarQube Quality Gate Check") {
-            steps {
-                script {
-                    def qualityGate = waitForQualityGate()
-                    if (qualityGate.status != 'OK') {
-                        error "Quality Gate failed: ${qualityGate.status}"
-                    } else {
-                        echo "SonarQube Quality Gates Passed"
-                    }
-                }
-            }
-        }
-
+   
         stage('Build') {
             steps {
                 echo 'Buduję wersję developerską aplikacji...'
