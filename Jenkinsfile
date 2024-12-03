@@ -17,6 +17,13 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                echo 'Instaluje zależności npm...'
+                sh 'npm install'
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Buduję stabilną wersję aplikacji...'
