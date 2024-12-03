@@ -8,6 +8,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Instaluję zależności...'
+                sh 'chmod +x ./mvnw'
             }
         }
 
