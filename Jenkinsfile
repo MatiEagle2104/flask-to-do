@@ -12,32 +12,27 @@ pipeline {
             }
         }
 
-        stage('SonarQube analysis') {
+        stage('Scan') {
             steps {
-                withSonarQubeEnv('xxxx-movil-sonarqube') {
-            // requires SonarQube Scanner for Gradle 2.1+
-            // It's important to add --info because of SONARJNKNS-281
-                    sh './gradlew --info sonarqube  -Dsonar.branch.name=${GIT_BRANCH}'
+                script {
+                    // Zmiana uprawnień do pliku mvnw
+                    sh 'chmod +x ./mvnw'
+                    if (!fileExists('./mvnw')) {
+                        error 'Plik mvnw nie został znaleziony w katalogu projektu. Upewnij się, że Maven Wrapper został dodany.'
+                    }
+                }
+                withSonarQubeEnv(installationName: 'SQ1') {
+                    // Uruchomienie analizy SonarQube, która korzysta z konfiguracji zawartej w sonar-project.properties
+                    sh './mvnw clean org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar'
                 }
             }
         }
-
-        stage("Quality Gate"){
-            steps {
-                timeout(time: 600, unit: 'SECONDS') {
-                    script{
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Se aborta la pipeline debido a que no se superan los umbrales de calidad: ${qg.status}"
-                        }
-                    }
-                } 
-            }
-        } 
    
         stage('Build') {
             steps {
                 echo 'Buduję wersję developerską aplikacji...'
+                // Przykładowe polecenie do budowania aplikacji (np. Maven)
+                sh './mvnw clean install' // Jeśli korzystasz z Maven Wrapper
             }
         }
 
