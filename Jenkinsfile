@@ -14,6 +14,11 @@ pipeline {
 
         stage('Scan') {
             steps {
+                script {
+                    if (!fileExists('./mvnw')) {
+                        error 'Plik mvnw nie został znaleziony w katalogu projektu. Upewnij się, że Maven Wrapper został dodany.'
+                    }
+                }
                 withSonarQubeEnv(installationName: 'SQ1') {
                     sh './mvnw clean org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar'
                 }
