@@ -30,7 +30,6 @@ pipeline {
                     -o './'
                     -s './'
                     -f 'ALL' 
-                    --nvdApiKey ${env.NVD_API_KEY}
                     --prettyPrint''', odcInstallation: 'owasp-dc'
         
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
