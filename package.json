@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "lint": "eslint ./"
+    "lint": "eslint ./",
+    "sonar": "sonar-scanner -Dsonar.projectKey=flask-to-do -Dsonar.host.url=http://192.168.1.18:9000"
   },
   "keywords": [
     "SQL Injecion",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "eslint": "^7.13.0",
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.6",
+    "sonar-scanner": "^4.6.0"  // Dodaj zależność do sonar-scanner
   }
 }
