@@ -23,13 +23,14 @@ pipeline {
         stage('Check Quality Gate') {
             steps {
                 echo 'Sprawdzanie SonarQube Quality Gate...'
-                // Pobiera status jakości kodu
                 script {
-                    def qg = waitForQualityGate()
-                    if (qg.status != 'OK') {
-                        error "SonarQube Quality Gate nie spełniony: ${qg.status}"
+                    timeout(time: 1, unit: 'MINUTES') { // Ograniczenie czasu oczekiwania
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "SonarQube Quality Gate nie spełniony: ${qg.status}"
+                        }
                     }
-                }
+                }    
             }
         }
 
