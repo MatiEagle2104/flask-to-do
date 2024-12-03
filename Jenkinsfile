@@ -1,13 +1,7 @@
 pipeline {
-    agent {
-        docker { image 'node:16' }  // Użyj obrazu Docker z Node.js
-    }
+    agent any
     options {
         buildDiscarder(logRotator(numToKeepStr: '5'))
-    }
-
-    environment {
-        SONARQUBE = 'SQ1'  // Nazwa zdefiniowanego serwera SonarQube w Jenkinsie
     }
 
     stages {
@@ -15,17 +9,6 @@ pipeline {
             steps {
                 echo 'Instaluję zależności...'
                 sh 'npm install'
-            }
-        }
-
-        stage('Run SonarQube Scan') {
-            steps {
-                script {
-                    // Przeprowadź skanowanie SonarQube
-                    withSonarQubeEnv(SONARQUBE) {
-                        sh 'npm run sonar'
-                    }
-                }
             }
         }
 
