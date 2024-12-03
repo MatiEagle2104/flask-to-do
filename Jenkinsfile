@@ -15,6 +15,7 @@ pipeline {
         stage('Scan') {
             steps {
                 script {
+                    sh 'chmod +x ./mvnw'
                     if (!fileExists('./mvnw')) {
                         error 'Plik mvnw nie został znaleziony w katalogu projektu. Upewnij się, że Maven Wrapper został dodany.'
                     }
