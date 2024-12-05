@@ -1,18 +1,11 @@
 pipeline {
-  agent any
-  options {
-    buildDiscarder(logRotator(numToKeepStr: '5'))
+  agent {
+    docker { image 'node:16-alpine' }
   }
   stages {
-    stage('Build') {
+    stage('Test') {
       steps {
-        sh 'docker build -t darinpope/java-web-app:latest .'
-      }
-    }
-    stage('Scan') {
-      steps {
-        sh 'trivy darinpope/java-web-app:latest'
+        sh 'node --version'
       }
     }
   }
-}
