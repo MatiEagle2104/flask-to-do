@@ -1,35 +1,18 @@
 pipeline {
-    agent any
-
-    stages {
-        stage('Checkout Code') {
-            steps {
-                echo 'Pobieram kod z gałęzi main...'
-                checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'Buduję stabilną wersję aplikacji...'
-                sh 'echo "Brak kodu do budowy - gałąź main"'
-            }
-        }
-
-        stage('Deploy to Production') {
-            steps {
-                echo 'Wdrażam aplikację na środowisko produkcyjne...'
-                sh 'echo "Brak wdrożenia - gałąź main"'
-            }
-        }
+  agent { label 'linux' }
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+  stages {
+    stage('Build') {
+      steps {
+        sh 'docker build -t darinpope/java-web-app:latest .'
+      }
     }
-
-    post {
-        success {
-            echo 'Pipeline zakończony sukcesem dla gałęzi main!'
-        }
-        failure {
-            echo 'Pipeline zakończony niepowodzeniem dla gałęzi main.'
-        }
+    stage('Scan') {
+      steps {
+        sh 'trivy darinpope/java-web-app:latest'
+      }
     }
+  }
 }
