@@ -11,11 +11,8 @@ pipeline {
       }
     }
     stage('Scan') {
-      environment {
-        TRIVY_CACHE_DIR = '~/.cache/trivy'
-      }
       steps {
-        sh 'trivy image --skip-db-update --skip-java-db-update --scanners vuln darinpope/java-web-app:latest'
+        sh 'trivy image --scanners vuln darinpope/java-web-app:latest'
       }
     }
   }
