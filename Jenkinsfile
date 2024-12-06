@@ -6,6 +6,7 @@ pipeline {
   stages {
     stage('Build') {
       steps {
+        sh 'chmod +x ./mvnw'
         sh 'docker build -t darinpope/java-web-app:latest .'
       }
     }
