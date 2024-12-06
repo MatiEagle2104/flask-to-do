@@ -12,7 +12,7 @@ pipeline {
     }
     stage('Scan') {
       steps {
-        sh 'trivy image darinpope/java-web-app:latest'
+        sh 'trivy image --scanners vuln darinpope/java-web-app:latest'
       }
     }
   }
