@@ -12,7 +12,7 @@ pipeline {
     }
     stage('Scan') {
       steps {
-        sh 'trivy image --offline --scanners vuln darinpope/java-web-app:latest'
+        sh 'trivy image --skip-db-update --skip-java-db-update --scanners vuln darinpope/java-web-app:latest'
       }
     }
   }
