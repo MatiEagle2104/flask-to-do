@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-    environment {
-        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
-    }
+  //  environment {
+    //    NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
+  //  }
 
     tools {
         nodejs 'NodeJS'  // Wybierz nazwę konfiguracji NodeJS
