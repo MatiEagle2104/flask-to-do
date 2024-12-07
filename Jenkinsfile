@@ -4,6 +4,11 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '5'))
     }
 
+    environment {
+        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'  // Zmień na odpowiednią ścieżkę do JDK 17
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+    }
+
     stages {
         stage('Install Dependencies') {
             steps {
@@ -15,7 +20,10 @@ pipeline {
         stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv(installationName: 'SQ1') {
+                    // Sprawdzenie wersji Javy
                     sh 'java --version'
+                    
+                    // Uruchomienie skanowania SonarQube
                     sh './mvnw clean org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar'
                 }
             }
