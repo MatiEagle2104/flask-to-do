@@ -5,6 +5,7 @@ pipeline {
         ZAP_HOST = '192.168.1.18'
         ZAP_PORT = '8090'
         TARGET_APP_URL = 'http://192.168.1.18:3000'
+        ZAP_API_KEY = 'AfRrgmEq6WwvmYI6s3bCuGIDxEF10TIa33dypgClnGk=' // Dodaj klucz API
     }
 
     stages {
@@ -15,7 +16,7 @@ pipeline {
                     // Uruchomienie skanowania OWASP ZAP
                     def zapScanCommand = """
                     curl -X POST http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/ \
-                        --data "url=${env.TARGET_APP_URL}&recurse=true"
+                        --data "url=${env.TARGET_APP_URL}&recurse=true&apikey=${env.ZAP_API_KEY}"
                     """
                     sh zapScanCommand
 
@@ -23,7 +24,7 @@ pipeline {
                     timeout(time: 5, unit: 'MINUTES') {
                         waitUntil {
                             def statusCheckCommand = """
-                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/" | jq '.status'
+                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}" | jq '.status'
                             """
                             def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
                             echo "Scan status: ${scanStatus}%"
@@ -40,7 +41,7 @@ pipeline {
                     echo 'Generating OWASP ZAP report...'
                     // Pobranie raportu HTML z OWASP ZAP
                     def getReportCommand = """
-                    curl -X GET http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/ \
+                    curl -X GET http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.ZAP_API_KEY} \
                         --output owasp-zap-report.html
                     """
                     sh getReportCommand
