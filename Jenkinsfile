@@ -25,18 +25,10 @@ pipeline {
             steps {
                 script {
                     echo 'Waiting for ZAP to be ready...'
-
-                    // Monitorowanie logów ZAP, szukanie komunikatu "ZAP is now listening"
-                    def logCheckCommand = """
-                    tail -f /zap/logs/zap.log | while read line; do
-                        if echo "\$line" | grep -q 'ZAP is now listening on localhost:${env.ZAP_PORT}'; then
-                            echo 'ZAP is ready!'
-                            exit 0
-                        fi
-                    done
-                    """
-                    // Uruchomienie monitorowania logów ZAP
-                    sh script: logCheckCommand, returnStatus: true
+                    
+                    // Usunięcie monitorowania logów, jeśli logi nie istnieją
+                    echo 'Assuming ZAP is ready without log monitoring.'
+                    sleep(time: 10, unit: 'SECONDS') // Czekanie 10 sekund, aby dać ZAP czas na uruchomienie
                 }
             }
         }
@@ -48,7 +40,7 @@ pipeline {
 
                     // Uruchomienie skanowania OWASP ZAP z użyciem klucza API
                     def zapScanCommand = """
-                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true&apikey=${env.ZAP_API_KEY}"
+                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true&apikey=${env.ZAP_API_KEY}" -H "Content-Type: application/json"
                     """
                     sh zapScanCommand
 
