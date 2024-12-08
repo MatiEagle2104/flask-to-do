@@ -28,7 +28,6 @@ pipeline {
                     
                     // Usunięcie monitorowania logów, jeśli logi nie istnieją
                     echo 'Assuming ZAP is ready without log monitoring.'
-                    sleep(time: 10, unit: 'SECONDS') // Czekanie 10 sekund, aby dać ZAP czas na uruchomienie
                 }
             }
         }
