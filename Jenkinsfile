@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        ZAP_HOST = '127.0.0.1'   // Adres lokalny, na którym ZAP nasłuchuje
-        ZAP_PORT = '8090'         // Port, na którym ZAP nasłuchuje
-        TARGET_APP_URL = 'http://192.168.1.18:3000'  // URL aplikacji do skanowania
+        ZAP_HOST = '127.0.0.1'       // Adres lokalny, na którym ZAP nasłuchuje
+        ZAP_PORT = '9091'             // Port, na którym ZAP nasłuchuje
+        TARGET_APP_URL = 'http://192.168.1.18:3000' // URL aplikacji docelowej
+        ZAP_API_KEY = 'sd8fr5tbjfp8t6hrpf832s68l7' // Twój klucz API ZAP
     }
 
     stages {
@@ -12,9 +13,9 @@ pipeline {
             steps {
                 script {
                     echo 'Starting ZAP...'
-                    // Uruchomienie ZAP w tle
+                    // Uruchomienie ZAP w tle z kluczem API
                     sh """
-                    /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT} &
+                    /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT} -config api.key=${env.ZAP_API_KEY} &
                     """
                 }
             }
@@ -27,13 +28,15 @@ pipeline {
 
                     // Monitorowanie logów ZAP, szukanie komunikatu "ZAP is now listening"
                     def logCheckCommand = """
-                    while ! curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/core/view/version"; do
-                        echo "Waiting for ZAP to start..."
+                    tail -f /zap/logs/zap.log | while read line; do
+                        if echo "\$line" | grep -q 'ZAP is now listening on localhost:${env.ZAP_PORT}'; then
+                            echo 'ZAP is ready!'
+                            exit 0
+                        fi
                     done
-                    echo 'ZAP is ready!'
                     """
                     // Uruchomienie monitorowania logów ZAP
-                    sh script: logCheckCommand
+                    sh script: logCheckCommand, returnStatus: true
                 }
             }
         }
@@ -43,9 +46,9 @@ pipeline {
                 script {
                     echo 'Starting OWASP ZAP scan...'
 
-                    // Uruchomienie skanowania OWASP ZAP
+                    // Uruchomienie skanowania OWASP ZAP z użyciem klucza API
                     def zapScanCommand = """
-                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true"
+                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true&apikey=${env.ZAP_API_KEY}"
                     """
                     sh zapScanCommand
 
@@ -53,7 +56,7 @@ pipeline {
                     timeout(time: 10, unit: 'MINUTES') {
                         waitUntil {
                             def statusCheckCommand = """
-                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/" | jq '.status'
+                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}" | jq '.status'
                             """
                             def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
                             echo "Scan status: ${scanStatus}%"
@@ -68,9 +71,9 @@ pipeline {
             steps {
                 script {
                     echo 'Generating OWASP ZAP report...'
-                    // Pobranie raportu HTML z OWASP ZAP
+                    // Pobranie raportu HTML z OWASP ZAP z użyciem klucza API
                     def getReportCommand = """
-                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/" --output owasp-zap-report.html
+                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.ZAP_API_KEY}" --output owasp-zap-report.html
                     """
                     sh getReportCommand
                 }
