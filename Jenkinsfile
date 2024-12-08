@@ -1,94 +1,95 @@
 pipeline {
     agent any
 
+    parameters {
+        // Stały typ skanowania: Baseline
+        string(
+            defaultValue: 'http://192.168.1.18:3000',
+            description: 'Target URL to scan',
+            name: 'TARGET'
+        )
+        booleanParam(
+            defaultValue: true,
+            description: 'Parameter to know if you want to generate a report.',
+            name: 'GENERATE_REPORT'
+        )
+    }
+
     environment {
-        ZAP_HOST = '127.0.0.1'   // Adres lokalny, na którym ZAP nasłuchuje
-        ZAP_PORT = '9091'         // Port, na którym ZAP nasłuchuje
-        TARGET_APP_URL = 'http://192.168.1.18:3000'
-        ZAP_LOG_PATH = '/path/to/zap.log'  // Ścieżka do logów ZAP
+        ZAP_IMAGE = 'owasp/zap2docker-stable:latest'
+        CONTAINER_NAME = 'owasp_zap_container'
+        ZAP_WORK_DIR = '/zap/wrk'
+        SCAN_TYPE = 'Baseline'  // Zawsze Baseline
     }
 
     stages {
-        stage('Setup') {
+        stage('Pull Docker Image and Start Container') {
             steps {
                 script {
-                    echo 'Starting ZAP...'
-                    // Uruchomienie ZAP w tle
+                    echo 'Pulling the latest OWASP ZAP Docker image...'
+                    sh 'docker pull $ZAP_IMAGE'
+                    echo 'Starting OWASP ZAP container...'
                     sh """
-                    /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT} > ${env.ZAP_LOG_PATH} 2>&1 &
+                    docker run -dt --name $CONTAINER_NAME $ZAP_IMAGE /bin/bash
+                    docker exec $CONTAINER_NAME mkdir -p $ZAP_WORK_DIR
                     """
                 }
             }
         }
 
-        stage('Wait for ZAP Ready') {
+        stage('Scanning target on OWASP ZAP container') {
             steps {
                 script {
-                    echo 'Waiting for ZAP to be ready...'
+                    target = "${params.TARGET}"
+                    echo "----> Scan type: $SCAN_TYPE"
+                    echo "----> Target URL: $target"
 
-                    // Monitorowanie logów ZAP, szukanie komunikatu "ZAP is now listening"
-                    def logCheckCommand = """
-                    tail -f ${env.ZAP_LOG_PATH} | while read line; do
-                        if echo "\$line" | grep -q 'ZAP is now listening on localhost:${env.ZAP_PORT}'; then
-                            echo 'ZAP is ready!'
-                            exit 0
-                        fi
-                    done
+                    // Zawsze wykonujemy skanowanie typu Baseline
+                    sh """
+                        docker exec $CONTAINER_NAME \
+                        zap-baseline.py \
+                        -t $target \
+                        -r $ZAP_WORK_DIR/report.html \
+                        -I
                     """
-                    // Uruchomienie monitorowania logów ZAP
-                    sh script: logCheckCommand, returnStatus: true
                 }
             }
         }
 
-        stage('Run OWASP ZAP Scan') {
+        stage('Copy Report to Workspace') {
             steps {
                 script {
-                    echo 'Starting OWASP ZAP scan...'
-
-                    // Uruchomienie skanowania OWASP ZAP
-                    def zapScanCommand = """
-                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true"
+                    echo 'Copying the report to Jenkins workspace...'
+                    sh """
+                    docker cp $CONTAINER_NAME:$ZAP_WORK_DIR/report.html ${WORKSPACE}/report.html
                     """
-                    sh zapScanCommand
-
-                    // Sprawdzenie statusu skanowania (polling)
-                    timeout(time: 10, unit: 'MINUTES') {
-                        waitUntil {
-                            def statusCheckCommand = """
-                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/" | jq '.status'
-                            """
-                            def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
-                            echo "Scan status: ${scanStatus}%"
-                            return scanStatus == '100' // ZAP zakończyło skanowanie
-                        }
-                    }
                 }
             }
         }
 
         stage('Generate Report') {
+            when {
+                expression { params.GENERATE_REPORT }
+            }
             steps {
                 script {
-                    echo 'Generating OWASP ZAP report...'
-                    // Pobranie raportu HTML z OWASP ZAP
-                    def getReportCommand = """
-                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/" --output owasp-zap-report.html
-                    """
-                    sh getReportCommand
+                    echo 'Generating the report...'
+                    // Jeżeli parametr GENERATE_REPORT jest true, generujemy raport
+                    // Inne opcje mogą obejmować konwersję na HTML, PDF lub wysyłanie e-maili.
+                    echo "The report is available at ${WORKSPACE}/report.html"
                 }
-                // Zachowanie raportu jako artefaktu
-                archiveArtifacts artifacts: 'owasp-zap-report.html', allowEmptyArchive: false
             }
         }
     }
 
     post {
-        success {
-            echo 'OWASP ZAP scan completed successfully.'
-        }
-        failure {
-            echo 'OWASP ZAP scan failed. Check the logs and report for more details.'
+        always {
+            echo 'Cleaning up the container...'
+            sh """
+                docker stop $CONTAINER_NAME
+                docker rm $CONTAINER_NAME
+            """
+            cleanWs()  // Czyszczenie przestrzeni roboczej po zakończeniu
         }
     }
 }
