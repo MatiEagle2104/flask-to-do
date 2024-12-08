@@ -2,23 +2,22 @@ pipeline {
     agent any
 
     environment {
-        ZAP_HOST = '127.0.0.1'           // ZAP host
-        ZAP_PORT = '8090'                 // Port na którym nasłuchuje ZAP
-        TARGET_APP_URL = 'http://192.168.1.18:3000'  // Adres aplikacji do przetestowania
-        API_KEY = 'AfRrgmEq6WwvmYI6s3bCuGIDxEF10TIa33dypgClnGk=' // Twój klucz API ZAP
+        ZAP_HOST = '127.0.0.1'   // Adres lokalny, na którym ZAP nasłuchuje
+        ZAP_PORT = '9091'         // Zmieniony port na 9091
+        TARGET_APP_URL = 'http://192.168.1.18:3000'
+        API_KEY = credentials('zap-api-key')  // Zmienna środowiskowa z kluczem API, która jest przechowywana w Jenkinsie
     }
 
     stages {
-        stage('Setup ZAP') {
+        stage('Setup') {
             steps {
                 script {
-                    echo 'Starting OWASP ZAP...'
-                    // Uruchomienie ZAP w tle, nasłuchującego na porcie 8090
+                    // Uruchomienie ZAP w tle na porcie 9091
+                    echo 'Starting ZAP...'
                     sh """
                     /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT}
                     """
-                    // Opcjonalnie: Czekaj na ZAP, aby się uruchomił (np. 30 sek)
-                    sleep(30)
+                    sleep(10) // Czekaj chwilę, aby ZAP się uruchomił
                 }
             }
         }
@@ -27,13 +26,9 @@ pipeline {
             steps {
                 script {
                     echo 'Starting OWASP ZAP scan...'
-
-                    // Uruchomienie skanowania aplikacji
+                    // Uruchomienie skanowania OWASP ZAP
                     def zapScanCommand = """
-                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/ \
-                        ?apikey=${env.API_KEY} \
-                        &url=${env.TARGET_APP_URL} \
-                        &recurse=true"
+                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.API_KEY}&url=${env.TARGET_APP_URL}&recurse=true"
                     """
                     sh zapScanCommand
 
@@ -56,11 +51,9 @@ pipeline {
             steps {
                 script {
                     echo 'Generating OWASP ZAP report...'
-
                     // Pobranie raportu HTML z OWASP ZAP
                     def getReportCommand = """
-                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.API_KEY}" \
-                        --output owasp-zap-report.html
+                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.API_KEY}" --output owasp-zap-report.html
                     """
                     sh getReportCommand
                 }
@@ -71,12 +64,6 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                echo 'Cleaning up...'
-                // Możesz dodać tutaj jakiekolwiek operacje czyszczące, jeśli są potrzebne
-            }
-        }
         success {
             echo 'OWASP ZAP scan completed successfully.'
         }
