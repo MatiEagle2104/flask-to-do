@@ -5,7 +5,6 @@ pipeline {
         ZAP_HOST = '127.0.0.1'   // Adres lokalny, na którym ZAP nasłuchuje
         ZAP_PORT = '9091'         // Zmieniony port na 9091
         TARGET_APP_URL = 'http://192.168.1.18:3000'
-        API_KEY = credentials('zap-api-key')  // Zmienna środowiskowa z kluczem API, która jest przechowywana w Jenkinsie
     }
 
     stages {
@@ -28,7 +27,7 @@ pipeline {
                     echo 'Starting OWASP ZAP scan...'
                     // Uruchomienie skanowania OWASP ZAP
                     def zapScanCommand = """
-                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.API_KEY}&url=${env.TARGET_APP_URL}&recurse=true"
+                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true"
                     """
                     sh zapScanCommand
 
@@ -36,7 +35,7 @@ pipeline {
                     timeout(time: 5, unit: 'MINUTES') {
                         waitUntil {
                             def statusCheckCommand = """
-                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.API_KEY}" | jq '.status'
+                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/" | jq '.status'
                             """
                             def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
                             echo "Scan status: ${scanStatus}%"
@@ -53,7 +52,7 @@ pipeline {
                     echo 'Generating OWASP ZAP report...'
                     // Pobranie raportu HTML z OWASP ZAP
                     def getReportCommand = """
-                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.API_KEY}" --output owasp-zap-report.html
+                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/" --output owasp-zap-report.html
                     """
                     sh getReportCommand
                 }
