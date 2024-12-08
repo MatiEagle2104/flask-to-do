@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        ZAP_HOST = 'localhost'
+        ZAP_HOST = '192.168.1.18'
         ZAP_PORT = '8090'
-        TARGET_APP_URL = 'http://localhost:3000'
+        TARGET_APP_URL = 'http://192.168.1.18:3000'
     }
 
     stages {
