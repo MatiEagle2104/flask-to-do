@@ -29,7 +29,6 @@ pipeline {
                     def logCheckCommand = """
                     while ! curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/core/view/version"; do
                         echo "Waiting for ZAP to start..."
-                        sleep 5
                     done
                     echo 'ZAP is ready!'
                     """
