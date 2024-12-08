@@ -3,20 +3,40 @@ pipeline {
 
     environment {
         ZAP_HOST = '127.0.0.1'   // Adres lokalny, na którym ZAP nasłuchuje
-        ZAP_PORT = '9091'         // Zmieniony port na 9091
+        ZAP_PORT = '9091'         // Port, na którym ZAP nasłuchuje
         TARGET_APP_URL = 'http://192.168.1.18:3000'
+        ZAP_LOG_PATH = '/path/to/zap.log'  // Ścieżka do logów ZAP
     }
 
     stages {
         stage('Setup') {
             steps {
                 script {
-                    // Uruchomienie ZAP w tle na porcie 9091
                     echo 'Starting ZAP...'
+                    // Uruchomienie ZAP w tle
                     sh """
-                    /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT}
+                    /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT} > ${env.ZAP_LOG_PATH} 2>&1 &
                     """
-                    sleep(10) // Czekaj chwilę, aby ZAP się uruchomił
+                }
+            }
+        }
+
+        stage('Wait for ZAP Ready') {
+            steps {
+                script {
+                    echo 'Waiting for ZAP to be ready...'
+
+                    // Monitorowanie logów ZAP, szukanie komunikatu "ZAP is now listening"
+                    def logCheckCommand = """
+                    tail -f ${env.ZAP_LOG_PATH} | while read line; do
+                        if echo "\$line" | grep -q 'ZAP is now listening on localhost:${env.ZAP_PORT}'; then
+                            echo 'ZAP is ready!'
+                            exit 0
+                        fi
+                    done
+                    """
+                    // Uruchomienie monitorowania logów ZAP
+                    sh script: logCheckCommand, returnStatus: true
                 }
             }
         }
@@ -25,6 +45,7 @@ pipeline {
             steps {
                 script {
                     echo 'Starting OWASP ZAP scan...'
+
                     // Uruchomienie skanowania OWASP ZAP
                     def zapScanCommand = """
                     curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true"
@@ -32,14 +53,14 @@ pipeline {
                     sh zapScanCommand
 
                     // Sprawdzenie statusu skanowania (polling)
-                    timeout(time: 5, unit: 'MINUTES') {
+                    timeout(time: 10, unit: 'MINUTES') {
                         waitUntil {
                             def statusCheckCommand = """
                             curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/" | jq '.status'
                             """
                             def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
                             echo "Scan status: ${scanStatus}%"
-                            return scanStatus == '100'
+                            return scanStatus == '100' // ZAP zakończyło skanowanie
                         }
                     }
                 }
