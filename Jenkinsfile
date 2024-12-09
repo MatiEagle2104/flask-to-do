@@ -13,11 +13,10 @@ pipeline {
     stage('Scan') {
       steps {
         script {
-          // Uruchomienie skanowania Trivy na obrazie darinpope/java-web-app:latest
-          sh 'trivy image --scanners vuln --output trivy-report.json darinpope/java-web-app:latest'
+          // Uruchomienie skanowania Trivy i zapis wyników w formacie JSON
+          sh 'trivy image --scanners vuln darinpope/java-web-app:latest'
         }
       }
     }
   }
 }
-
