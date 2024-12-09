@@ -51,6 +51,31 @@ pipeline {
                     curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
                     """
                     sh startScanCommand
+
+                    // Czekanie na zakończenie skanowania
+                    echo 'Waiting for active scan to finish...'
+
+                    // Monitorowanie postępu skanowania
+                    def scanCompleted = false
+                    while (!scanCompleted) {
+                        // Sprawdzenie statusu skanowania
+                        def scanStatusCommand = """
+                        curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}"
+                        """
+                        def scanStatus = sh(script: scanStatusCommand, returnStdout: true).trim()
+                        echo "Scan Status: ${scanStatus}"
+
+                        // Sprawdzanie, czy skanowanie zostało zakończone
+                        if (scanStatus == "100") {
+                            scanCompleted = true
+                        } else {
+                            // Czekanie 10 sekund przed ponownym sprawdzeniem statusu
+                            echo 'Scan not finished yet. Waiting for 10 seconds...'
+                            sleep(10)
+                        }
+                    }
+
+                    echo 'Active scan completed.'
                 }
             }
         }
