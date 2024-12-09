@@ -16,7 +16,7 @@ pipeline {
 
                     // Uruchomienie skanowania OWASP ZAP z użyciem klucza API
                     def zapScanCommand = """
-                    curl -X POST "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?url=${env.TARGET_APP_URL}&recurse=true&apikey=${env.ZAP_API_KEY}" -H "Content-Type: application/json"
+                    curl "http://127.0.0.1:8090/JSON/context/action/includeInContext/?apikey=dqj6d907sv428fuqjl7r779s5f&contextName=Default+Context&regex=http://localhost:3000.*"
                     """
                     sh zapScanCommand
 
@@ -24,7 +24,7 @@ pipeline {
                     timeout(time: 10, unit: 'MINUTES') {
                         waitUntil {
                             def statusCheckCommand = """
-                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}" | jq '.status'
+                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}"
                             """
                             def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
                             echo "Scan status: ${scanStatus}%"
