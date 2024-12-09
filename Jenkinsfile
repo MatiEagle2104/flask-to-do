@@ -19,17 +19,6 @@ pipeline {
                     curl "http://127.0.0.1:8090/JSON/context/action/includeInContext/?apikey=dqj6d907sv428fuqjl7r779s5f&contextName=Default+Context&regex=http://localhost:3000.*"
                     """
                     sh zapScanCommand
-
-                    // Sprawdzenie statusu skanowania (polling)
-                    timeout(time: 10, unit: 'MINUTES') {
-                        waitUntil {
-                            def statusCheckCommand = """
-                            curl -s "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}"
-                            """
-                            def scanStatus = sh(script: statusCheckCommand, returnStdout: true).trim()
-                            echo "Scan status: ${scanStatus}%"
-                            return scanStatus == '100' // ZAP zakończyło skanowanie
-                        }
                     }
                 }
             }
