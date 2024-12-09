@@ -9,29 +9,6 @@ pipeline {
     }
 
     stages {
-        stage('Setup') {
-            steps {
-                script {
-                    echo 'Starting ZAP...'
-                    // Uruchomienie ZAP w tle z kluczem API
-                    sh """
-                    /usr/share/zaproxy/zap.sh -daemon -port ${env.ZAP_PORT} -config api.key=${env.ZAP_API_KEY} &
-                    """
-                }
-            }
-        }
-
-        stage('Wait for ZAP Ready') {
-            steps {
-                script {
-                    echo 'Waiting for ZAP to be ready...'
-                    
-                    // Usunięcie monitorowania logów, jeśli logi nie istnieją
-                    echo 'Assuming ZAP is ready without log monitoring.'
-                }
-            }
-        }
-
         stage('Run OWASP ZAP Scan') {
             steps {
                 script {
