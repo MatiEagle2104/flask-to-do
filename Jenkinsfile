@@ -18,5 +18,11 @@ pipeline {
         }
       }
     }
+    stage('Publish Results') {
+      steps {
+        // Publikowanie raportu w Jenkinsie (jeśli chcesz opublikować plik JSON)
+        publishHTML([reportDir: '', reportFiles: 'trivy-report.json', reportName: 'Trivy Scan Results'])
+      }
+    }
   }
 }
