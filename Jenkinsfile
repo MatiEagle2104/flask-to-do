@@ -69,24 +69,6 @@ pipeline {
                 archiveArtifacts artifacts: 'owasp-zap-report.html', allowEmptyArchive: false
             }
         }
-
-        stage('Extract and Display Alerts') {
-            steps {
-                script {
-                    echo 'Extracting summary of alerts from OWASP ZAP report...'
-
-                    // Wydobycie sekcji "Summary of Alerts" z raportu HTML
-                    def reportFile = 'owasp-zap-report.html'
-                    def alertSummary = sh(script: """
-                        grep -A 20 'Summary of Alerts' ${reportFile} | grep -B 20 'Alert Detail'
-                    """, returnStdout: true).trim()
-
-                    // Wyświetlenie skróconego podsumowania alertów w logach Jenkins
-                    echo 'Summary of Alerts:'
-                    echo alertSummary
-                }
-            }
-        }
     }
 
     post {
