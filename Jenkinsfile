@@ -22,7 +22,7 @@ pipeline {
 
                     // Uruchomienie aktywnego skanowania ZAP
                     def startScanCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}"
+                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
                     """
                     sh startScanCommand
                 }
