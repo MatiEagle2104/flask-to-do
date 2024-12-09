@@ -62,11 +62,16 @@ pipeline {
                         def scanStatusCommand = """
                         curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}"
                         """
-                        def scanStatus = sh(script: scanStatusCommand, returnStdout: true).trim()
-                        echo "Scan Status: ${scanStatus}"
+                        def scanStatusResponse = sh(script: scanStatusCommand, returnStdout: true).trim()
+
+                        // Parsowanie JSON z odpowiedzi
+                        def scanStatusJson = readJSON(text: scanStatusResponse)
+                        def status = scanStatusJson.status
+
+                        echo "Scan Status: ${status}"
 
                         // Sprawdzanie, czy skanowanie zostało zakończone
-                        if (scanStatus == "100") {
+                        if (status == "100") {
                             scanCompleted = true
                         } else {
                             // Czekanie 10 sekund przed ponownym sprawdzeniem statusu
