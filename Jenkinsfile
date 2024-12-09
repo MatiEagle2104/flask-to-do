@@ -9,16 +9,42 @@ pipeline {
     }
 
     stages {
-        stage('Run OWASP ZAP Scan') {
+        stage('Run OWASP ZAP Spider') {
             steps {
                 script {
-                    echo 'Starting OWASP ZAP scan...'
+                    echo 'Running OWASP ZAP Spider to load the application...'
 
-                    // Uruchomienie skanowania aplikacji w ZAP
-                    def zapScanCommand = """
+                    // Uruchomienie "spidera" w celu załadowania aplikacji i dodania URL do drzewa skanowania
+                    def spiderCommand = """
+                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/spider/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&maxDepth=5&subtreeOnly=true"
+                    """
+                    sh spiderCommand
+
+                    // Czekanie, aż "spider" zakończy skanowanie
+                    echo 'Waiting for the spider scan to finish...'
+                    sleep(30)  // Czas oczekiwania na zakończenie skanowania
+                }
+            }
+        }
+
+        stage('Include URL in Context') {
+            steps {
+                script {
+                    echo 'Including URL in ZAP context...'
+
+                    // Dodanie URL do kontekstu
+                    def includeInContextCommand = """
                     curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
                     """
-                    sh zapScanCommand
+                    sh includeInContextCommand
+                }
+            }
+        }
+
+        stage('Run OWASP ZAP Active Scan') {
+            steps {
+                script {
+                    echo 'Starting OWASP ZAP active scan...'
 
                     // Uruchomienie aktywnego skanowania ZAP
                     def startScanCommand = """
