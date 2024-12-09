@@ -16,10 +16,9 @@ pipeline {
 
                     // Uruchomienie skanowania OWASP ZAP z użyciem klucza API
                     def zapScanCommand = """
-                    curl "http://127.0.0.1:8090/JSON/context/action/includeInContext/?apikey=dqj6d907sv428fuqjl7r779s5f&contextName=Default+Context&regex=http://localhost:3000.*"
+                    curl "http://127.0.0.1:8090/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
                     """
                     sh zapScanCommand
-                    }
                 }
             }
         }
