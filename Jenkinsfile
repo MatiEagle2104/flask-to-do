@@ -5,7 +5,7 @@ pipeline {
         ZAP_HOST = '127.0.0.1'       // Adres lokalny, na którym ZAP nasłuchuje
         ZAP_PORT = '8090'             // Port, na którym ZAP nasłuchuje
         TARGET_APP_URL = 'http://192.168.1.18:3000' // URL aplikacji docelowej
-        ZAP_API_KEY = 'sd8fr5tbjfp8t6hrpf832s68l7' // Twój klucz API ZAP
+        ZAP_API_KEY = 'dqj6d907sv428fuqjl7r779s5f' // Twój klucz API ZAP
     }
 
     stages {
