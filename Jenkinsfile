@@ -5,7 +5,7 @@ pipeline {
         ZAP_HOST = '127.0.0.1'       // Adres lokalny, na którym ZAP nasłuchuje
         ZAP_PORT = '8090'             // Port, na którym ZAP nasłuchuje
         TARGET_APP_URL = 'http://192.168.1.18:3000' // URL aplikacji docelowej
-        ZAP_API_KEY = 'dqj6d907sv428fuqjl7r779s5f' // Twój klucz API ZAP
+        ZAP_API_KEY = 'sd8fr5tbjfp8t6hrpf832s68l7' // Twój klucz API ZAP
     }
 
     stages {
@@ -14,11 +14,17 @@ pipeline {
                 script {
                     echo 'Starting OWASP ZAP scan...'
 
-                    // Uruchomienie skanowania OWASP ZAP z użyciem klucza API
+                    // Uruchomienie skanowania aplikacji w ZAP
                     def zapScanCommand = """
-                    curl "http://127.0.0.1:8090/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
+                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
                     """
                     sh zapScanCommand
+
+                    // Uruchomienie aktywnego skanowania ZAP
+                    def startScanCommand = """
+                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}"
+                    """
+                    sh startScanCommand
                 }
             }
         }
