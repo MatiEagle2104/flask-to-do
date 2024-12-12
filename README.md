@@ -9,4 +9,4 @@ Poniższe repozytorium zawiera kod związany z projektem polegającym na stowrze
 
 Pliki w tym repozytorium zostały zaczerpnięte z projektu https://github.com/darinpope/java-web-app
 
-Pliki zostały specjalnie zmodyfikowane tak, aby zawierały szereg błędów i luk bezpieczeństwa, które później były wykrywane przez system i narzędzia DevSecOps. Pliki Jenkinsfile, służące do konfiguracji i integracji narzędzi z Multibranch Jenkins Pipeline są autorskie.
+Pliki zostały specjalnie zmodyfikowane tak, aby zawierały szereg błędów i luk bezpieczeństwa do wykrycia przez system i narzędzia DevSecOps. Pliki Jenkinsfile, służące do konfiguracji i integracji narzędzi z Multibranch Jenkins Pipeline są autorskie.
