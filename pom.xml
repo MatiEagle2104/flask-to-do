@@ -1,88 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.5</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.example</groupId>
+	<artifactId>demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>demo</name>
+	<description>Demo project for Spring Boot</description>
+	<properties>
+		<java.version>11</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
 
-    environment {
-        ZAP_HOST = '127.0.0.1'       
-        ZAP_PORT = '8090'            
-        TARGET_APP_URL = 'http://192.168.1.18:3000' 
-        ZAP_API_KEY = 'dqj6d907sv428fuqjl7r779s5f' 
-    }
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
-    stages {
-        stage('Run OWASP ZAP Spider') {
-            steps {
-                script {
-                    echo 'Running OWASP ZAP Spider to load the application...'
+	<reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>3.0.0-M7</version>
+      </plugin>
+    </plugins>
+  </reporting>
 
-                    def spiderCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/spider/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&maxDepth=5&subtreeOnly=true"
-                    """
-                    sh spiderCommand
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.7.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>3.0.0</version>
+			</plugin>
+		</plugins>
+	</build>
 
-                    echo 'Waiting for the spider scan to finish...'
-                    sleep(30)  
-                }
-            }
-        }
-
-        stage('Include URL in Context') {
-            steps {
-                script {
-                    echo 'Including URL in ZAP context...'
-
-                    def includeInContextCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
-                    """
-                    sh includeInContextCommand
-                }
-            }
-        }
-
-        stage('Run OWASP ZAP Active Scan') {
-            steps {
-                script {
-                    echo 'Starting OWASP ZAP active scan...'
-
-                    def startScanCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
-                    """
-                    sh startScanCommand
-
-                    echo 'Waiting for active scan to finish...'
-
-                    def scanCompleted = false
-                    while (!scanCompleted) {
-                        def scanStatusCommand = """
-                        curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}"
-                        """
-                        def scanStatusResponse = sh(script: scanStatusCommand, returnStdout: true).trim()
-
-                        def scanStatusJson = readJSON(text: scanStatusResponse)
-                        def status = scanStatusJson.status
-
-                        echo "Scan Status: ${status}"
-
-                        if (status == "100") {
-                            scanCompleted = true
-                        } else {
-                            echo 'Scan not finished yet. Waiting...'
-                            sleep(5)
-                        }
-                    }
-
-                    echo 'Active scan completed.'
-                }
-            }
-        }
-
-        stage('Generate Report') {
-            steps {
-                script {
-                    echo 'Generating OWASP ZAP report...'
-                    def getReportCommand = """
-                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.ZAP_API_KEY}" --output owasp-zap-report.html
-                    """
-                    sh getReportCommand
-                }
-                archiveArtifacts artifacts: 'owasp-zap-report.html', allowEmptyArchive: false
-            }
-        }
-    }
+</project>
