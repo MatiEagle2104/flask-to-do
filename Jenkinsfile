@@ -1,82 +1,106 @@
 pipeline {
     agent any
 
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+    }
+
     environment {
-        ZAP_HOST = '127.0.0.1'       // Adres lokalny, na którym ZAP nasłuchuje
-        ZAP_PORT = '8090'             // Port, na którym ZAP nasłuchuje
-        TARGET_APP_URL = 'http://192.168.1.18:3000' // URL aplikacji docelowej
-        ZAP_API_KEY = 'dqj6d907sv428fuqjl7r779s5f' // Twój klucz API ZAP
+        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+        ZAP_HOST = '127.0.0.1'
+        ZAP_PORT = '8090'
+        TARGET_APP_URL = 'http://192.168.1.18:3000'
+        ZAP_API_KEY = 'dqj6d907sv428fuqjl7r779s5f'
+        DOCKER_IMAGE = 'darinpope/java-web-app'
+        DOCKER_TAG = 'latest'
+    }
+
+    tools {
+        nodejs 'NodeJS'
     }
 
     stages {
-        stage('Run OWASP ZAP Spider') {
+        stage('OWASP Dependency-Check Vulnerabilities') {
+            steps {
+                echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
+                dependencyCheck additionalArguments: ''' 
+                    -o './'
+                    -s './'
+                    -f 'ALL' 
+                    --prettyPrint''', odcInstallation: 'owasp-dc'
+
+                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv(installationName: 'SQ1') {
+                    sh './mvnw clean org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar'
+                }
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                script {
+                    sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
+                    sh 'trivy image --scanners vuln ${DOCKER_IMAGE}:${DOCKER_TAG}'
+                }
+            }
+        }
+
+        stage('OWASP ZAP Spider and Active Scan') {
             steps {
                 script {
                     echo 'Running OWASP ZAP Spider to load the application...'
 
-                    // Uruchomienie "spidera" w celu załadowania aplikacji i dodania URL do drzewa skanowania
                     def spiderCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/spider/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&maxDepth=5&subtreeOnly=true"
+                    curl \"http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/spider/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&maxDepth=5&subtreeOnly=true\"
                     """
                     sh spiderCommand
 
-                    // Czekanie, aż "spider" zakończy skanowanie
                     echo 'Waiting for the spider scan to finish...'
-                    sleep(30)  // Czas oczekiwania na zakończenie skanowania
+                    sleep(30)  
                 }
-            }
-        }
 
-        stage('Include URL in Context') {
-            steps {
                 script {
                     echo 'Including URL in ZAP context...'
 
-                    // Dodanie URL do kontekstu
                     def includeInContextCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
+                    curl \"http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/context/action/includeInContext/?apikey=${env.ZAP_API_KEY}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*\"
                     """
                     sh includeInContextCommand
                 }
-            }
-        }
 
-        stage('Run OWASP ZAP Active Scan') {
-            steps {
                 script {
                     echo 'Starting OWASP ZAP active scan...'
 
-                    // Uruchomienie aktywnego skanowania ZAP
                     def startScanCommand = """
-                    curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*"
+                    curl \"http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/action/scan/?apikey=${env.ZAP_API_KEY}&url=${env.TARGET_APP_URL}&contextName=Default+Context&regex=${env.TARGET_APP_URL}.*\"
                     """
                     sh startScanCommand
 
-                    // Czekanie na zakończenie skanowania
                     echo 'Waiting for active scan to finish...'
 
-                    // Monitorowanie postępu skanowania
                     def scanCompleted = false
                     while (!scanCompleted) {
-                        // Sprawdzenie statusu skanowania
                         def scanStatusCommand = """
-                        curl "http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}"
+                        curl \"http://${env.ZAP_HOST}:${env.ZAP_PORT}/JSON/ascan/view/status/?apikey=${env.ZAP_API_KEY}\"
                         """
                         def scanStatusResponse = sh(script: scanStatusCommand, returnStdout: true).trim()
 
-                        // Parsowanie JSON z odpowiedzi
                         def scanStatusJson = readJSON(text: scanStatusResponse)
                         def status = scanStatusJson.status
 
                         echo "Scan Status: ${status}"
 
-                        // Sprawdzanie, czy skanowanie zostało zakończone
                         if (status == "100") {
                             scanCompleted = true
                         } else {
-                            // Czekanie 10 sekund przed ponownym sprawdzeniem statusu
-                            echo 'Scan not finished yet. Waiting for 10 seconds...'
-                            sleep(10)
+                            echo 'Scan not finished yet. Waiting...'
+                            sleep(5)
                         }
                     }
 
@@ -85,17 +109,15 @@ pipeline {
             }
         }
 
-        stage('Generate Report') {
+        stage('Generate OWASP ZAP Report') {
             steps {
                 script {
                     echo 'Generating OWASP ZAP report...'
-                    // Pobranie raportu HTML z OWASP ZAP z użyciem klucza API
                     def getReportCommand = """
-                    curl -X GET "http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.ZAP_API_KEY}" --output owasp-zap-report.html
+                    curl -X GET \"http://${env.ZAP_HOST}:${env.ZAP_PORT}/OTHER/core/other/htmlreport/?apikey=${env.ZAP_API_KEY}\" --output owasp-zap-report.html
                     """
                     sh getReportCommand
                 }
-                // Zachowanie raportu jako artefaktu
                 archiveArtifacts artifacts: 'owasp-zap-report.html', allowEmptyArchive: false
             }
         }
@@ -103,10 +125,10 @@ pipeline {
 
     post {
         success {
-            echo 'OWASP ZAP scan completed successfully.'
+            echo 'Pipeline zakończony sukcesem dla gałęzi main!'
         }
         failure {
-            echo 'OWASP ZAP scan failed. Check the logs and report for more details.'
+            echo 'Pipeline zakończony niepowodzeniem dla gałęzi main. Sprawdź logi i raporty.'
         }
     }
 }
