@@ -47,10 +47,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline zakończony sukcesem dla gałęzi test!'
+            echo 'Pipeline zakończony sukcesem dla gałęzi code!'
         }
         failure {
-            echo 'Pipeline zakończony niepowodzeniem dla gałęzi test.'
+            echo 'Pipeline zakończony niepowodzeniem dla gałęzi code.'
         }
     }
 }
