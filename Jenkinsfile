@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-//    environment {
-//        NVD_API_KEY = credentials('d7f6b61c-a33d-4fa0-9520-38c28b4d8a6d')
-//    }
-
     tools {
         nodejs 'NodeJS'
     }
@@ -26,14 +22,33 @@ pipeline {
 
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
-                echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
-                dependencyCheck additionalArguments: ''' 
-                    -o './'
-                    -s './'
-                    -f 'ALL' 
-                    --prettyPrint''', odcInstallation: 'owasp-dc'
-        
-                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+                script {
+                    echo 'Rozpoczynam skanowanie zależności za pomocą OWASP Dependency Check...'
+                    dependencyCheck additionalArguments: ''' 
+                        -o './'
+                        -s './'
+                        -f 'ALL' 
+                        --prettyPrint''', odcInstallation: 'owasp-dc'
+
+                    dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+
+                    // Analiza raportu dla HIGH/CRITICAL podatności
+                    def reportFile = readFile('dependency-check-report.json')
+                    def reportJson = readJSON text: reportFile
+
+                    def vulnerabilities = reportJson.dependencies.findAll { dep ->
+                        dep.vulnerabilities?.find { vul ->
+                            vul.severity in ['HIGH', 'CRITICAL']
+                        }
+                    }
+
+                    if (vulnerabilities) {
+                        echo "Znaleziono ${vulnerabilities.size()} podatności HIGH/CRITICAL."
+                        error 'Pipeline zakończony niepowodzeniem ze względu na podatności HIGH/CRITICAL.'
+                    } else {
+                        echo 'Nie znaleziono podatności HIGH/CRITICAL.'
+                    }
+                }
             }
         }
 
